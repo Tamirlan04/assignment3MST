@@ -22,16 +22,19 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Gson gson = new Gson();
 
-        GraphInput input = gson.fromJson(new FileReader("data/input.json"), GraphInput.class);
-        Graph graph = new Graph(input.nodes.size());
-        for (GraphInput gInput : GraphsData.graphs) {
-            Graph graph = new Graph(gInput.nodes.size());
+        GraphsData graphsData = gson.fromJson(new FileReader("data/input.json"), GraphsData.class);
+        if (graphsData == null || graphsData.graphs == null) {
+            System.err.println("Error: No graphs in input file.");
+            return;
+        }
+        Map<String, Object> allResults = new LinkedHashMap<>();
 
-            for (EdgeInput e : gInput.edges) {
+        for (EdgeInput e : gInput.edges) {
                 int u = gInput.nodes.indexOf(e.otkuda);
                 int v = gInput.nodes.indexOf(e.kuda);
                 graph.addEdge(u, v, e.weight);
             }
+
 
             var primResult = Prim.run(graph);
             var kruskalResult = Kruskal.run(graph);
