@@ -29,11 +29,12 @@ public class Main {
         }
         Map<String, Object> allResults = new LinkedHashMap<>();
 
-        for (EdgeInput e : gInput.edges) {
-                int u = gInput.nodes.indexOf(e.otkuda);
-                int v = gInput.nodes.indexOf(e.kuda);
-                graph.addEdge(u, v, e.weight);
+        for (GraphInput gInput : graphsData.graphs) {
+            if (gInput == null || gInput.nodes == null || gInput.edges == null) {
+                System.err.println("Empty or invalid graph. Skip.");
+                continue;
             }
+
 
 
             var primResult = Prim.run(graph);
