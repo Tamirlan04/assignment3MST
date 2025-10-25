@@ -1,32 +1,35 @@
-import com.google.gson.*;
-import java.io.*;
+import com.google.gson.Gson;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.*;
 
+class EdgeInput {
+    String from;
+    String to;
+    int weight;
+}
+
+class GraphInput {
+    int id;
+    List<String> nodes;
+    List<EdgeInput> edges;
+}
+
+class GraphsData {
+    List<GraphInput> graphs;
+}
+
 public class Main {
-    class GraphsData {
-        List<GraphInput> graphs;
-    }
-
-    class GraphInput {
-        int id;
-        List<String> nodes;
-        List<EdgeInput> edges;
-    }
-
-    class EdgeInput {
-        String otkuda;
-        String kuda;
-        int weight;
-    }
-
     public static void main(String[] args) throws Exception {
         Gson gson = new Gson();
 
         GraphsData graphsData = gson.fromJson(new FileReader("data/input.json"), GraphsData.class);
+
         if (graphsData == null || graphsData.graphs == null) {
             System.err.println("Error: No graphs in input file.");
             return;
         }
+
         Map<String, Object> allResults = new LinkedHashMap<>();
 
         for (GraphInput gInput : graphsData.graphs) {
@@ -35,27 +38,40 @@ public class Main {
                 continue;
             }
 
+            System.out.println("Proccessing graph " + gInput.id +
+                    " (" + gInput.nodes.size() + " vertices, " + gInput.edges.size() + " edges)");
 
+            Graph graph = new Graph(gInput.nodes.size());
 
-            var primResult = Prim.run(graph);
-            var kruskalResult = Kruskal.run(graph);
+            for (EdgeInput e : gInput.edges) {
+                if (e == null) continue;
 
+                int u = gInput.nodes.indexOf(e.from);
+                int v = gInput.nodes.indexOf(e.to);
+
+                if (u == -1 || v == -1) {
+                    System.err.println("Error: vertice did't find " + e.from + " or " + e.to + " in graph " + gInput.id);
+                    continue;
+                }
+
+                graph.addEdge(u, v, e.weight);
             }
 
+            Map<String, Object> primResult = Prim.run(graph);
+            Map<String, Object> kruskalResult = Kruskal.run(graph);
 
-        Map<String, Object> primResult = Prim.run(graph);
-        Map<String, Object> kruskalResult = Kruskal.run(graph);
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("Prim", primResult);
+            result.put("Kruskal", kruskalResult);
 
-        Map<String, Object> results = new LinkedHashMap<>();
-        results.put("Prim", primResult);
-        results.put("Kruskal", kruskalResult);
+            allResults.put("Graph_" + gInput.id, result);
+        }
 
         FileWriter writer = new FileWriter("data/output.json");
-        gson.toJson(results, writer);
+        gson.toJson(allResults, writer);
         writer.close();
 
-        System.out.println("✅ Prim and Kruskal completed successfully!");
-        System.out.println("Prim total cost: " + primResult.get("total_cost"));
-        System.out.println("Kruskal total cost: " + kruskalResult.get("total_cost"));
+        System.out.println("results saved in data/output.json");
     }
 }
+
